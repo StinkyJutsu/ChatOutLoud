@@ -10,6 +10,7 @@ using NAudio.Wave;
 using System.Net.WebSockets;
 using System.Speech.Synthesis;
 using System.Text.Json;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Text.Json.Serialization;
 using System.Threading.Tasks;
@@ -62,10 +63,29 @@ public partial class MainWindow : Window
     private readonly HashSet<string> _knownTwitchChatters =
         new(StringComparer.OrdinalIgnoreCase);
 
+    private readonly HashSet<string> _currentTwitchChatters =
+        new(StringComparer.OrdinalIgnoreCase);
+
+    private readonly HashSet<string> _observedSessionChatters =
+        new(StringComparer.OrdinalIgnoreCase);
+
+    private readonly HashSet<string> _observedSharedChatChatters =
+        new(StringComparer.OrdinalIgnoreCase);
+
+    private readonly Dictionary<string, string> _userDisplayNames =
+        new(StringComparer.OrdinalIgnoreCase);
+
+    private string? _sharedChatSessionId;
+
+    private readonly HashSet<string> _sharedChatParticipantBroadcasterIds =
+        new(StringComparer.Ordinal);
+
     private bool _hasTwitchChatterBaseline;
 
     private readonly HashSet<string> _mutedUsers =
         MutedUserStore.Load();
+
+    private string _userSearchText = "";
 
     private readonly List<string> _mutedPhrases =
         MutedPhraseStore.Load();
@@ -223,6 +243,8 @@ public partial class MainWindow : Window
         {
             MutedPhrasesList.Items.Add(phrase);
         }
+
+        RefreshDetectedUsersList();
 
         DisconnectTwitchButton.IsEnabled = false;
 
@@ -742,6 +764,7 @@ public partial class MainWindow : Window
         object? sender,
         EventArgs e)
     {
+        await LoadSharedChatSessionAsync();
         await LoadCurrentTwitchChattersAsync();
     }
 
@@ -820,7 +843,11 @@ public partial class MainWindow : Window
         _twitchChatCancellation?.Cancel();
 
         _knownTwitchChatters.Clear();
+        _currentTwitchChatters.Clear();
+        _observedSessionChatters.Clear();
         _hasTwitchChatterBaseline = false;
+
+        RefreshDetectedUsersList();
 
         _speechQueue.Clear();
         UpdateQueueCount();
@@ -1233,6 +1260,64 @@ public partial class MainWindow : Window
         return token;
     }
 
+    private async Task<TwitchUser?> FindTwitchUserByLoginAsync(
+        string login)
+    {
+        string? accessToken =
+            _twitchAccessToken;
+
+        if (string.IsNullOrWhiteSpace(accessToken))
+        {
+            throw new InvalidOperationException(
+                "Authorize Twitch before looking up users.");
+        }
+
+        string trimmedLogin =
+            login.Trim();
+
+        if (string.IsNullOrWhiteSpace(trimmedLogin))
+        {
+            return null;
+        }
+
+        using HttpRequestMessage request = new(
+            HttpMethod.Get,
+            $"https://api.twitch.tv/helix/users?login={Uri.EscapeDataString(trimmedLogin)}");
+
+        request.Headers.Authorization =
+            new AuthenticationHeaderValue(
+                "Bearer",
+                accessToken);
+
+        request.Headers.Add(
+            "Client-Id",
+            TwitchConfig.ClientId);
+
+        using HttpResponseMessage response =
+            await Http.SendAsync(request);
+
+        string json =
+            await response.Content.ReadAsStringAsync();
+
+        if (!response.IsSuccessStatusCode)
+        {
+            throw new InvalidOperationException(
+                $"Could not look up Twitch user: {json}");
+        }
+
+        TwitchUsersResponse? users =
+            JsonSerializer.Deserialize<TwitchUsersResponse>(
+                json);
+
+        if (users?.Data is null ||
+            users.Data.Count == 0)
+        {
+            return null;
+        }
+
+        return users.Data[0];
+    }
+
     private async Task LoadTwitchProfileAsync(
         string accessToken)
     {
@@ -1376,6 +1461,143 @@ public partial class MainWindow : Window
         return sessionId;
     }
 
+    private async Task LoadSharedChatSessionAsync()
+    {
+        string? accessToken =
+            _twitchAccessToken;
+
+        string? broadcasterId =
+            _twitchUserId;
+
+        if (string.IsNullOrWhiteSpace(accessToken) ||
+            string.IsNullOrWhiteSpace(broadcasterId))
+        {
+            return;
+        }
+
+        using HttpRequestMessage request = new(
+            HttpMethod.Get,
+            $"https://api.twitch.tv/helix/shared_chat/session?broadcaster_id={Uri.EscapeDataString(broadcasterId)}");
+
+        request.Headers.Authorization =
+            new AuthenticationHeaderValue(
+                "Bearer",
+                accessToken);
+
+        request.Headers.Add(
+            "Client-Id",
+            TwitchConfig.ClientId);
+
+        try
+        {
+            using HttpResponseMessage response =
+                await Http.SendAsync(request);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                return;
+            }
+
+            string json =
+                await response.Content.ReadAsStringAsync();
+
+            using JsonDocument document =
+                JsonDocument.Parse(json);
+
+            JsonElement data =
+                document.RootElement.GetProperty("data");
+
+            if (data.GetArrayLength() == 0)
+            {
+                bool hadSharedChatState =
+                    !string.IsNullOrWhiteSpace(
+                        _sharedChatSessionId) ||
+                    _sharedChatParticipantBroadcasterIds.Count > 0 ||
+                    _observedSharedChatChatters.Count > 0;
+
+                _sharedChatSessionId = null;
+                _sharedChatParticipantBroadcasterIds.Clear();
+                _observedSharedChatChatters.Clear();
+
+                if (hadSharedChatState)
+                {
+                    RefreshDetectedUsersList();
+                }
+
+                return;
+            }
+
+            JsonElement session =
+                data[0];
+
+            string? newSessionId =
+                session
+                    .GetProperty("session_id")
+                    .GetString();
+
+            if (string.IsNullOrWhiteSpace(newSessionId))
+            {
+                return;
+            }
+
+            bool sessionChanged =
+                !string.IsNullOrWhiteSpace(
+                    _sharedChatSessionId) &&
+                !string.Equals(
+                    _sharedChatSessionId,
+                    newSessionId,
+                    StringComparison.Ordinal);
+
+            HashSet<string> participantBroadcasterIds =
+                new(StringComparer.Ordinal);
+
+            if (session.TryGetProperty(
+                    "participants",
+                    out JsonElement participants) &&
+                participants.ValueKind == JsonValueKind.Array)
+            {
+                foreach (JsonElement participant in
+                         participants.EnumerateArray())
+                {
+                    string participantBroadcasterId =
+                        participant
+                            .GetProperty("broadcaster_id")
+                            .GetString() ?? "";
+
+                    if (!string.IsNullOrWhiteSpace(
+                            participantBroadcasterId))
+                    {
+                        participantBroadcasterIds.Add(
+                            participantBroadcasterId);
+                    }
+                }
+            }
+
+            if (sessionChanged)
+            {
+                _observedSharedChatChatters.Clear();
+            }
+
+            _sharedChatSessionId =
+                newSessionId;
+
+            _sharedChatParticipantBroadcasterIds.Clear();
+            _sharedChatParticipantBroadcasterIds.UnionWith(
+                participantBroadcasterIds);
+
+            if (sessionChanged)
+            {
+                RefreshDetectedUsersList();
+            }
+        }
+        catch (HttpRequestException)
+        {
+        }
+        catch (JsonException)
+        {
+        }
+    }
+
     private async Task StartTwitchChatAsync()
     {
         if (_isTwitchChatIntentionallyStopped)
@@ -1388,6 +1610,8 @@ public partial class MainWindow : Window
 
         await CreateTwitchChatSubscriptionAsync(
             sessionId);
+
+        await LoadSharedChatSessionAsync();
 
         await LoadCurrentTwitchChattersAsync();
 
@@ -1510,23 +1734,32 @@ public partial class MainWindow : Window
         HashSet<string> currentChatters =
             new(StringComparer.OrdinalIgnoreCase);
 
-        DetectedUsersList.Items.Clear();
-
         foreach (JsonElement chatter in
                  document.RootElement.GetProperty("data").EnumerateArray())
         {
-            string username =
-                chatter.GetProperty("user_name").GetString() ?? "";
+            string login =
+                chatter.GetProperty("user_login").GetString() ?? "";
 
-            if (string.IsNullOrWhiteSpace(username) ||
-                !currentChatters.Add(username))
+            string displayName =
+                chatter.GetProperty("user_name").GetString() ?? login;
+
+            if (string.IsNullOrWhiteSpace(login))
             {
                 continue;
             }
 
-            DetectedUsersList.Items.Add(
-                GetUserDisplayText(username));
+            currentChatters.Add(login);
+
+            _userDisplayNames[login] =
+                string.IsNullOrWhiteSpace(displayName)
+                    ? login
+                    : displayName;
         }
+
+        _currentTwitchChatters.Clear();
+        _currentTwitchChatters.UnionWith(currentChatters);
+
+        RefreshDetectedUsersList();
 
         if (!_hasTwitchChatterBaseline)
         {
@@ -1828,10 +2061,28 @@ public partial class MainWindow : Window
                     .GetProperty("payload")
                     .GetProperty("event");
 
-            string chatterName =
+            string chatterLogin =
+                eventData
+                    .GetProperty("chatter_user_login")
+                    .GetString() ?? "";
+
+            string chatterDisplayName =
                 eventData
                     .GetProperty("chatter_user_name")
-                    .GetString() ?? "Unknown";
+                    .GetString() ?? chatterLogin;
+
+            string chatterName =
+                string.IsNullOrWhiteSpace(chatterLogin)
+                    ? chatterDisplayName
+                    : chatterLogin;
+
+            if (!string.IsNullOrWhiteSpace(chatterName))
+            {
+                _userDisplayNames[chatterName] =
+                    string.IsNullOrWhiteSpace(chatterDisplayName)
+                        ? chatterName
+                        : chatterDisplayName;
+            }
 
             JsonElement messageElement =
                 eventData
@@ -1855,31 +2106,41 @@ public partial class MainWindow : Window
                         messageElement);
             }
 
-            bool userAlreadyListed = false;
-
-            foreach (object item in DetectedUsersList.Items)
+            if (!string.IsNullOrWhiteSpace(chatterName))
             {
-                if (item is string displayText &&
-                    string.Equals(
-                        GetUsernameFromDisplayText(displayText),
-                        chatterName,
-                        StringComparison.OrdinalIgnoreCase))
+                string? sourceBroadcasterId =
+                    eventData.TryGetProperty(
+                        "source_broadcaster_user_id",
+                        out JsonElement sourceBroadcasterIdElement) &&
+                    sourceBroadcasterIdElement.ValueKind ==
+                        JsonValueKind.String
+                        ? sourceBroadcasterIdElement.GetString()
+                        : null;
+
+                if (!string.IsNullOrWhiteSpace(sourceBroadcasterId))
                 {
-                    userAlreadyListed = true;
-                    break;
-                }
-            }
+                    _sharedChatParticipantBroadcasterIds.Add(
+                        sourceBroadcasterId);
 
-            if (!userAlreadyListed)
-            {
-                DetectedUsersList.Items.Add(
-                    GetUserDisplayText(chatterName));
+                    _observedSharedChatChatters.Add(
+                        chatterName);
+                }
+                else
+                {
+                    _observedSessionChatters.Add(
+                        chatterName);
+                }
+
+                RefreshDetectedUsersList();
             }
 
             if (_mutedUsers.Contains(chatterName))
             {
                 continue;
             }
+
+            messageText =
+                RemoveMutedPhrases(messageText);
 
             bool muteCommands =
                 FindName("MuteCommandsCheckBox")
@@ -1927,20 +2188,6 @@ public partial class MainWindow : Window
                                     !part.StartsWith(
                                         "www.",
                                         StringComparison.OrdinalIgnoreCase)));
-            }
-
-            foreach (string phrase in _mutedPhrases)
-            {
-                if (string.IsNullOrWhiteSpace(phrase))
-                {
-                    continue;
-                }
-
-                messageText =
-                    messageText.Replace(
-                        phrase,
-                        "",
-                        StringComparison.OrdinalIgnoreCase);
             }
 
             messageText =
@@ -1993,7 +2240,9 @@ public partial class MainWindow : Window
                 }
 
                 string filteredChatterName =
-                    chatterName;
+                    string.IsNullOrWhiteSpace(chatterDisplayName)
+                        ? chatterName
+                        : chatterDisplayName;
 
                 if (muteNumbers)
                 {
@@ -2063,6 +2312,31 @@ public partial class MainWindow : Window
         }
     }
 
+    private string RemoveMutedPhrases(
+        string text)
+    {
+        foreach (string phrase in _mutedPhrases)
+        {
+            if (string.IsNullOrWhiteSpace(phrase))
+            {
+                continue;
+            }
+
+            string pattern =
+                $@"(?<!\w){Regex.Escape(phrase)}(?!\w)";
+
+            text =
+                Regex.Replace(
+                    text,
+                    pattern,
+                    "",
+                    RegexOptions.IgnoreCase |
+                    RegexOptions.CultureInvariant);
+        }
+
+        return text;
+    }
+
     private void AddMutedPhraseButton_Click(
         object sender,
         RoutedEventArgs e)
@@ -2110,6 +2384,78 @@ public partial class MainWindow : Window
         MutedPhraseStore.Save(_mutedPhrases);
     }
 
+    private void UserSearchTextBox_TextChanged(
+        object sender,
+        System.Windows.Controls.TextChangedEventArgs e)
+    {
+        _userSearchText =
+            UserSearchTextBox.Text.Trim();
+
+        RefreshDetectedUsersList();
+    }
+
+    private async Task<ManualTwitchUserLookupResult?>
+        FindManualTwitchUserAsync(
+            string login)
+    {
+        TwitchUser? user =
+            await FindTwitchUserByLoginAsync(login);
+
+        if (user is null)
+        {
+            return null;
+        }
+
+        string canonicalLogin =
+            string.IsNullOrWhiteSpace(user.Login)
+                ? login.Trim()
+                : user.Login;
+
+        string displayName =
+            string.IsNullOrWhiteSpace(user.DisplayName)
+                ? canonicalLogin
+                : user.DisplayName;
+
+        return new ManualTwitchUserLookupResult(
+            canonicalLogin,
+            displayName);
+    }
+
+    private void AddManualUserButton_Click(
+        object sender,
+        RoutedEventArgs e)
+    {
+        AddManualUserWindow dialog =
+            new(FindManualTwitchUserAsync)
+            {
+                Owner = this
+            };
+
+        if (dialog.ShowDialog() != true ||
+            string.IsNullOrWhiteSpace(dialog.SelectedLogin))
+        {
+            return;
+        }
+
+        string login =
+            dialog.SelectedLogin.Trim();
+
+        string displayName =
+            string.IsNullOrWhiteSpace(dialog.SelectedDisplayName)
+                ? login
+                : dialog.SelectedDisplayName.Trim();
+
+        _userDisplayNames[login] =
+            displayName;
+
+        if (_mutedUsers.Add(login))
+        {
+            MutedUserStore.Save(_mutedUsers);
+        }
+
+        RefreshDetectedUsersList();
+    }
+
     private void DetectedUsersList_SelectionChanged(
         object sender,
         System.Windows.Controls.SelectionChangedEventArgs e)
@@ -2128,24 +2474,88 @@ public partial class MainWindow : Window
         DetectedUsersList.SelectedIndex = -1;
     }
 
+    private void RefreshDetectedUsersList()
+    {
+        HashSet<string> visibleUsers =
+            new(
+                _currentTwitchChatters,
+                StringComparer.OrdinalIgnoreCase);
+
+        visibleUsers.UnionWith(
+            _observedSessionChatters);
+
+        visibleUsers.UnionWith(
+            _observedSharedChatChatters);
+
+        visibleUsers.UnionWith(
+            _mutedUsers);
+
+        IEnumerable<string> filteredUsers =
+            visibleUsers;
+
+        if (!string.IsNullOrWhiteSpace(_userSearchText))
+        {
+            filteredUsers =
+                filteredUsers.Where(
+                    username =>
+                        username.Contains(
+                            _userSearchText,
+                            StringComparison.OrdinalIgnoreCase));
+        }
+
+        DetectedUsersList.Items.Clear();
+
+        foreach (string username in
+                 filteredUsers.OrderBy(
+                     username => username,
+                     StringComparer.OrdinalIgnoreCase))
+        {
+            DetectedUsersList.Items.Add(
+                GetUserDisplayText(username));
+        }
+    }
+
     private string GetUserDisplayText(
         string username)
     {
+        string displayName =
+            _userDisplayNames.TryGetValue(
+                username,
+                out string? savedDisplayName) &&
+            !string.IsNullOrWhiteSpace(savedDisplayName)
+                ? savedDisplayName
+                : username;
+
         return _mutedUsers.Contains(username)
-            ? $"🔇 {username}"
-            : username;
+            ? $"🔇 {displayName}"
+            : displayName;
     }
 
-    private static string GetUsernameFromDisplayText(
+    private string GetUsernameFromDisplayText(
         string displayText)
     {
         const string mutedPrefix = "🔇 ";
 
-        return displayText.StartsWith(
+        string visibleName =
+            displayText.StartsWith(
                 mutedPrefix,
                 StringComparison.Ordinal)
-            ? displayText[mutedPrefix.Length..]
-            : displayText;
+                ? displayText[mutedPrefix.Length..]
+                : displayText;
+
+        foreach (KeyValuePair<string, string> user in
+                 _userDisplayNames)
+        {
+            if (string.Equals(
+                    user.Value,
+                    visibleName,
+                    StringComparison.OrdinalIgnoreCase))
+            {
+                return user.Key;
+            }
+        }
+
+        return visibleName;
     }
 
     private void RefreshDisplayedUsername(
@@ -2195,7 +2605,7 @@ public partial class MainWindow : Window
             MutedUserStore.Save(_mutedUsers);
         }
 
-        RefreshDisplayedUsername(username);
+        RefreshDetectedUsersList();
 
         _selectedUsername = null;
     }
@@ -2217,7 +2627,7 @@ public partial class MainWindow : Window
             MutedUserStore.Save(_mutedUsers);
         }
 
-        RefreshDisplayedUsername(username);
+        RefreshDetectedUsersList();
 
         _selectedUsername = null;
     }
@@ -2236,7 +2646,16 @@ public partial class MainWindow : Window
         _twitchChatSocket = null;
 
         _knownTwitchChatters.Clear();
+        _currentTwitchChatters.Clear();
+        _observedSessionChatters.Clear();
+        _observedSharedChatChatters.Clear();
+
+        _sharedChatSessionId = null;
+        _sharedChatParticipantBroadcasterIds.Clear();
+
         _hasTwitchChatterBaseline = false;
+
+        RefreshDetectedUsersList();
 
         _twitchAccessToken = null;
         _twitchRefreshToken = null;
@@ -2369,6 +2788,9 @@ public partial class MainWindow : Window
     {
         [JsonPropertyName("id")]
         public string Id { get; set; } = "";
+
+        [JsonPropertyName("login")]
+        public string Login { get; set; } = "";
 
         [JsonPropertyName("display_name")]
         public string DisplayName { get; set; } = "";

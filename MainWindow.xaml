@@ -130,6 +130,40 @@
             <Setter Property="BorderThickness" Value="1"/>
             <Setter Property="Padding" Value="10,8"/>
             <Setter Property="CaretBrush" Value="#55D9FF"/>
+
+            <Setter Property="Template">
+                <Setter.Value>
+
+                    <ControlTemplate TargetType="TextBox">
+
+                        <Border x:Name="TextBoxBorder"
+                                Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="8">
+
+                        <ScrollViewer x:Name="PART_ContentHost"
+                                    Background="Transparent"
+                                    Margin="{TemplateBinding Padding}"/>
+
+                        </Border>
+
+                        <ControlTemplate.Triggers>
+
+                            <Trigger Property="IsKeyboardFocused"
+                                     Value="True">
+                                <Setter TargetName="TextBoxBorder"
+                                        Property="BorderBrush"
+                                        Value="#55D9FF"/>
+                            </Trigger>
+
+                        </ControlTemplate.Triggers>
+
+                    </ControlTemplate>
+
+                </Setter.Value>
+            </Setter>
+
         </Style>
 
         <!-- LIST BOX -->
@@ -138,6 +172,35 @@
             <Setter Property="Foreground" Value="#F4F7FF"/>
             <Setter Property="BorderBrush" Value="#314766"/>
             <Setter Property="BorderThickness" Value="1"/>
+
+            <Setter Property="Template">
+                <Setter.Value>
+
+                    <ControlTemplate TargetType="ListBox">
+
+                        <Border Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="8">
+
+                            <ScrollViewer Margin="0,5,4,5"
+                                          Background="Transparent"
+                                          Focusable="False"
+                                          VerticalScrollBarVisibility="{TemplateBinding ScrollViewer.VerticalScrollBarVisibility}"
+                                          HorizontalScrollBarVisibility="{TemplateBinding ScrollViewer.HorizontalScrollBarVisibility}"
+                                          CanContentScroll="{TemplateBinding ScrollViewer.CanContentScroll}">
+
+                                <ItemsPresenter/>
+
+                            </ScrollViewer>
+
+                        </Border>
+
+                    </ControlTemplate>
+
+                </Setter.Value>
+            </Setter>
+
         </Style>
 
         <Style TargetType="ListBoxItem">
@@ -356,7 +419,7 @@
                          TargetType="ScrollBar">
 
             <Grid Width="12"
-                  Background="#080C18">
+                  Background="Transparent">
 
                 <Track x:Name="PART_Track"
                        Orientation="Vertical"
@@ -398,7 +461,7 @@
                          TargetType="ScrollBar">
 
             <Grid Height="12"
-                  Background="#080C18">
+                  Background="Transparent">
 
                 <Track x:Name="PART_Track"
                        Orientation="Horizontal"
@@ -525,11 +588,6 @@
                                 ViewportSize="{TemplateBinding ViewportWidth}"
                                 Visibility="{TemplateBinding ComputedHorizontalScrollBarVisibility}"/>
 
-                            <Border Grid.Row="1"
-                                    Grid.Column="1"
-                                    Width="12"
-                                    Height="12"
-                                    Background="#080C18"/>
 
                         </Grid>
 
@@ -896,9 +954,10 @@
                                                FontWeight="SemiBold"
                                                FontSize="14"/>
 
-                                    <TextBox Grid.Row="1"
+                                    <TextBox x:Name="UserSearchTextBox"
+                                             Grid.Row="1"
                                              Margin="0,12,0,8"
-                                             Text="Search users..."/>
+                                             TextChanged="UserSearchTextBox_TextChanged"/>
 
                                     <ListBox x:Name="DetectedUsersList"
                                              Grid.Row="2"
@@ -930,7 +989,8 @@
                                                 Click="UnmuteUserButton_Click"/>
 
                                         <Button Content="Add Manually"
-                                                Style="{StaticResource NormalButton}"/>
+                                                Style="{StaticResource NormalButton}"
+                                                Click="AddManualUserButton_Click"/>
 
                                     </StackPanel>
 
@@ -1096,10 +1156,10 @@
                                         <Border Grid.Column="3"
                                                 Height="36"
                                                 VerticalAlignment="Center"
-                                                Background="#080D19"
+                                                Background="#0B1222"
                                                 BorderBrush="#314766"
                                                 BorderThickness="1"
-                                                CornerRadius="4"
+                                                CornerRadius="8"
                                                 Padding="10,0">
 
                                             <TextBlock x:Name="JoinSoundFileNameText"
