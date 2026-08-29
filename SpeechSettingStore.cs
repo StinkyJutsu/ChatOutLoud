@@ -64,6 +64,11 @@ internal sealed class SpeechSettings
 
     public string? VoiceName { get; set; }
 
+    public string VoiceProviderId { get; set; } =
+        "windows";
+
+    public string? VoiceId { get; set; }
+
     public double Volume { get; set; } = 100.0;
 
     public double SpeechSpeed { get; set; }

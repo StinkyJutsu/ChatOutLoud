@@ -825,8 +825,275 @@
                                     <TextBlock Text="Voice"
                                                Foreground="#AAB5CA"/>
 
-                                    <ComboBox x:Name="VoiceComboBox"
-                                              SelectedIndex="0"/>
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+
+                                        <ComboBox x:Name="VoiceComboBox"
+                                                  SelectedIndex="0">
+
+                                            <ComboBox.Resources>
+
+                                                <Style TargetType="ComboBoxItem">
+                                                    <Setter Property="Background"
+                                                            Value="#10172A"/>
+                                                    <Setter Property="Foreground"
+                                                            Value="#F4F7FF"/>
+                                                    <Setter Property="Padding"
+                                                            Value="10,8"/>
+                                                    <Setter Property="HorizontalContentAlignment"
+                                                            Value="Stretch"/>
+                                                    <Setter Property="BorderBrush"
+                                                            Value="Transparent"/>
+                                                    <Setter Property="BorderThickness"
+                                                            Value="1"/>
+
+                                                    <Setter Property="Template">
+                                                        <Setter.Value>
+                                                            <ControlTemplate TargetType="ComboBoxItem">
+
+                                                                <Border x:Name="VoiceItemBorder"
+                                                                        Background="{TemplateBinding Background}"
+                                                                        BorderBrush="{TemplateBinding BorderBrush}"
+                                                                        BorderThickness="{TemplateBinding BorderThickness}"
+                                                                        CornerRadius="6"
+                                                                        Margin="1">
+
+                                                                    <ContentPresenter Margin="{TemplateBinding Padding}"
+                                                                                      HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                                                                      VerticalAlignment="Center"/>
+
+                                                                </Border>
+
+                                                                <ControlTemplate.Triggers>
+
+                                                                    <Trigger Property="IsMouseOver"
+                                                                             Value="True">
+                                                                        <Setter TargetName="VoiceItemBorder"
+                                                                                Property="Background"
+                                                                                Value="#182640"/>
+                                                                    </Trigger>
+
+                                                                    <Trigger Property="IsSelected"
+                                                                             Value="True">
+                                                                        <Setter TargetName="VoiceItemBorder"
+                                                                                Property="Background"
+                                                                                Value="#16324A"/>
+                                                                        <Setter TargetName="VoiceItemBorder"
+                                                                                Property="BorderBrush"
+                                                                                Value="#55D9FF"/>
+                                                                    </Trigger>
+
+                                                                </ControlTemplate.Triggers>
+
+                                                            </ControlTemplate>
+                                                        </Setter.Value>
+                                                    </Setter>
+                                                </Style>
+
+                                                <Style TargetType="ScrollBar">
+                                                    <Setter Property="Width"
+                                                            Value="14"/>
+
+                                                    <Setter Property="Template">
+                                                        <Setter.Value>
+                                                            <ControlTemplate TargetType="ScrollBar">
+
+                                                                <Border Background="#17213A"
+                                                                        CornerRadius="7"
+                                                                        Width="14">
+
+                                                                    <Track x:Name="PART_Track"
+                                                                           Orientation="Vertical"
+                                                                           Minimum="{TemplateBinding Minimum}"
+                                                                           Maximum="{TemplateBinding Maximum}"
+                                                                           Value="{TemplateBinding Value}"
+                                                                           ViewportSize="{TemplateBinding ViewportSize}"
+                                                                           IsDirectionReversed="True"
+                                                                           Margin="2">
+
+                                                                        <Track.DecreaseRepeatButton>
+                                                                            <RepeatButton Style="{StaticResource ScrollRepeatButton}"
+                                                                                          Command="{x:Static ScrollBar.PageUpCommand}"/>
+                                                                        </Track.DecreaseRepeatButton>
+
+                                                                        <Track.Thumb>
+                                                                            <Thumb Style="{StaticResource ScrollThumb}"
+                                                                                   MinHeight="28"/>
+                                                                        </Track.Thumb>
+
+                                                                        <Track.IncreaseRepeatButton>
+                                                                            <RepeatButton Style="{StaticResource ScrollRepeatButton}"
+                                                                                          Command="{x:Static ScrollBar.PageDownCommand}"/>
+                                                                        </Track.IncreaseRepeatButton>
+
+                                                                    </Track>
+
+                                                                </Border>
+
+                                                            </ControlTemplate>
+                                                        </Setter.Value>
+                                                    </Setter>
+                                                </Style>
+
+                                            </ComboBox.Resources>
+
+                                            <ComboBox.Template>
+                                                <ControlTemplate TargetType="ComboBox">
+
+                                                    <Grid>
+
+                                                        <Border x:Name="VoiceComboBorder"
+                                                                Background="{TemplateBinding Background}"
+                                                                BorderBrush="{TemplateBinding BorderBrush}"
+                                                                BorderThickness="{TemplateBinding BorderThickness}"
+                                                                CornerRadius="8">
+
+                                                            <Grid>
+
+                                                                <Grid.ColumnDefinitions>
+                                                                    <ColumnDefinition Width="*"/>
+                                                                    <ColumnDefinition Width="38"/>
+                                                                </Grid.ColumnDefinitions>
+
+                                                                <ContentPresenter Margin="10,0,6,0"
+                                                                                  VerticalAlignment="Center"
+                                                                                  Content="{TemplateBinding SelectionBoxItem}"/>
+
+                                                                <Border Grid.Column="1"
+                                                                        BorderBrush="#314766"
+                                                                        BorderThickness="1,0,0,0">
+
+                                                                    <ToggleButton Style="{StaticResource ComboToggleButton}"
+                                                                                  IsChecked="{Binding IsDropDownOpen,
+                                                                                                      RelativeSource={RelativeSource TemplatedParent},
+                                                                                                      Mode=TwoWay}">
+
+                                                                        <Path Data="M 0 0 L 5 5 L 10 0"
+                                                                              Stroke="#55D9FF"
+                                                                              StrokeThickness="2"
+                                                                              HorizontalAlignment="Center"
+                                                                              VerticalAlignment="Center"/>
+
+                                                                    </ToggleButton>
+
+                                                                </Border>
+
+                                                            </Grid>
+
+                                                        </Border>
+
+                                                        <Popup x:Name="PART_Popup"
+                                                               IsOpen="{TemplateBinding IsDropDownOpen}"
+                                                               Placement="Bottom"
+                                                               AllowsTransparency="True">
+
+                                                            <Border Background="#0B1222"
+                                                                    BorderBrush="#314766"
+                                                                    BorderThickness="1"
+                                                                    CornerRadius="10"
+                                                                    Margin="0,4,0,0"
+                                                                    MinWidth="{Binding ActualWidth,
+                                                                                       RelativeSource={RelativeSource TemplatedParent}}">
+
+                                                                <Grid Margin="4">
+
+                                                                    <Grid.RowDefinitions>
+                                                                        <RowDefinition Height="Auto"/>
+                                                                        <RowDefinition Height="*"/>
+                                                                    </Grid.RowDefinitions>
+
+                                                                    <TextBox x:Name="VoiceSearchTextBox"
+                                                                             Height="34"
+                                                                             Margin="4,4,4,8"
+                                                                             Padding="10,0"
+                                                                             VerticalContentAlignment="Center"
+                                                                             ToolTip="Search voices..."
+                                                                             TextChanged="VoiceSearchTextBox_TextChanged"/>
+
+                                                                    <ScrollViewer Grid.Row="1"
+                                                                                  MaxHeight="280"
+                                                                                  Margin="4,0,4,4"
+                                                                                  VerticalScrollBarVisibility="Visible"
+                                                                                  HorizontalScrollBarVisibility="Disabled"
+                                                                                  CanContentScroll="True">
+
+                                                                        <ItemsPresenter/>
+
+                                                                    </ScrollViewer>
+
+                                                                </Grid>
+
+                                                            </Border>
+
+                                                        </Popup>
+
+                                                    </Grid>
+
+                                                </ControlTemplate>
+                                            </ComboBox.Template>
+
+                                            <ComboBox.ItemsPanel>
+                                                <ItemsPanelTemplate>
+                                                    <VirtualizingStackPanel IsVirtualizing="True"
+                                                                            VirtualizationMode="Recycling"/>
+                                                </ItemsPanelTemplate>
+                                            </ComboBox.ItemsPanel>
+
+                                            <ComboBox.ItemContainerStyle>
+                                                <Style TargetType="ComboBoxItem"
+                                                       BasedOn="{StaticResource {x:Type ComboBoxItem}}">
+                                                    <Setter Property="VirtualizingPanel.IsVirtualizingWhenGrouping"
+                                                            Value="True"/>
+                                                </Style>
+                                            </ComboBox.ItemContainerStyle>
+
+                                            <ComboBox.ItemTemplate>
+                                                <DataTemplate>
+                                                    <Grid>
+                                                        <Grid.ColumnDefinitions>
+                                                            <ColumnDefinition Width="*"/>
+                                                            <ColumnDefinition Width="Auto"/>
+                                                        </Grid.ColumnDefinitions>
+
+                                                        <TextBlock Text="{Binding DisplayName}"
+                                                                   Foreground="#F4F7FF"/>
+
+                                                        <TextBlock Grid.Column="1"
+                                                                   Margin="16,0,0,0"
+                                                                   Text="{Binding ProviderName}"
+                                                                   Foreground="#7F8CA5"
+                                                                   FontSize="11"/>
+                                                    </Grid>
+                                                </DataTemplate>
+                                            </ComboBox.ItemTemplate>
+
+                                            <ComboBox.GroupStyle>
+                                                <GroupStyle>
+                                                    <GroupStyle.HeaderTemplate>
+                                                        <DataTemplate>
+                                                            <Border Background="#10172A"
+                                                                    Padding="10,8,10,5">
+                                                                <TextBlock Text="{Binding Name}"
+                                                                           Foreground="#55D9FF"
+                                                                           FontWeight="SemiBold"
+                                                                           FontSize="11"/>
+                                                            </Border>
+                                                        </DataTemplate>
+                                                    </GroupStyle.HeaderTemplate>
+                                                </GroupStyle>
+                                            </ComboBox.GroupStyle>
+
+                                        </ComboBox>
+
+                                        <Button Grid.Column="1"
+                                                Content="Manage TTS Providers"
+                                                Margin="10,0,0,0"
+                                                Style="{StaticResource NormalButton}"
+                                                Click="ManageTtsProvidersButton_Click"/>
+                                    </Grid>
 
                                     <Grid Margin="0,10,0,0">
                                         <TextBlock Text="Volume"

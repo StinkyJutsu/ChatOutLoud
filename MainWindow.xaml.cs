@@ -1,4 +1,6 @@
-﻿using System;
+﻿using ChatOutLoud.TtsProviders;
+using ChatOutLoud.TtsProviders.Providers;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -35,6 +37,16 @@ public partial class MainWindow : Window
     private bool _isTwitchChatIntentionallyStopped;
 
     private readonly SpeechSynthesizer _speechSynthesizer = new();
+
+    private readonly GoogleCloudTtsProvider _googleTtsProvider =
+        (GoogleCloudTtsProvider)(
+            TtsProviderManager.Shared.GetProvider(
+                "google-cloud")
+            ?? throw new InvalidOperationException(
+                "Google Cloud TTS provider is not registered."));
+
+    private readonly BulkObservableCollection<TtsVoice> _availableTtsVoices =
+        [];
 
     private MemoryStream? _ttsAudioStream;
     private WaveFileReader? _ttsWaveReader;
@@ -225,10 +237,50 @@ public partial class MainWindow : Window
             }
         }
 
+        VoiceComboBox.ItemsSource =
+            _availableTtsVoices;
+
         LoadInstalledVoices();
 
-        if (!string.IsNullOrWhiteSpace(savedSpeechSettings.VoiceName) &&
-            VoiceComboBox.Items.Contains(savedSpeechSettings.VoiceName))
+        VoiceComboBox.Items.GroupDescriptions.Clear();
+
+        VoiceComboBox.Items.GroupDescriptions.Add(
+            new System.Windows.Data.PropertyGroupDescription(
+                nameof(TtsVoice.ProviderName)));
+
+        TtsVoice? savedTtsVoice =
+            null;
+
+        foreach (TtsVoice voice in
+                 _availableTtsVoices)
+        {
+            if (string.Equals(
+                    voice.ProviderId,
+                    savedSpeechSettings.VoiceProviderId,
+                    StringComparison.OrdinalIgnoreCase) &&
+                string.Equals(
+                    voice.VoiceId,
+                    savedSpeechSettings.VoiceId,
+                    StringComparison.Ordinal))
+            {
+                savedTtsVoice =
+                    voice;
+
+                break;
+            }
+        }
+
+        if (savedTtsVoice is not null &&
+            VoiceComboBox.Items.Contains(
+                savedTtsVoice))
+        {
+            VoiceComboBox.SelectedItem =
+                savedTtsVoice;
+        }
+        else if (!string.IsNullOrWhiteSpace(
+                     savedSpeechSettings.VoiceName) &&
+                 VoiceComboBox.Items.Contains(
+                     savedSpeechSettings.VoiceName))
         {
             VoiceComboBox.SelectedItem =
                 savedSpeechSettings.VoiceName;
@@ -302,8 +354,20 @@ public partial class MainWindow : Window
                 ? joinSoundVolumeSlider.Value
                 : 100.0;
 
+        TtsVoice? selectedVoice =
+            VoiceComboBox.SelectedItem as TtsVoice;
+
         string? voiceName =
+            selectedVoice?.DisplayName ??
             VoiceComboBox.SelectedItem as string;
+
+        string voiceProviderId =
+            selectedVoice?.ProviderId ??
+            "windows";
+
+        string? voiceId =
+            selectedVoice?.VoiceId ??
+            voiceName;
 
         double volume =
             VolumeSlider.Value;
@@ -316,6 +380,8 @@ public partial class MainWindow : Window
             {
                 SpeakUsernames = speakUsernames,
                 VoiceName = voiceName,
+                VoiceProviderId = voiceProviderId,
+                VoiceId = voiceId,
                 Volume = volume,
                 SpeechSpeed = speechSpeed,
                 MuteLinks = muteLinks,
@@ -331,23 +397,226 @@ public partial class MainWindow : Window
 
     private void LoadInstalledVoices()
     {
-        VoiceComboBox.Items.Clear();
+        _availableTtsVoices.Clear();
+
+        List<TtsVoice> windowsVoices =
+            [];
 
         foreach (InstalledVoice voice in
                  _speechSynthesizer.GetInstalledVoices())
         {
-            if (voice.Enabled)
+            if (!voice.Enabled)
             {
-                VoiceComboBox.Items.Add(
-                    voice.VoiceInfo.Name);
+                continue;
             }
+
+            windowsVoices.Add(
+                new TtsVoice(
+                    "windows",
+                    "Windows Voices",
+                    voice.VoiceInfo.Name,
+                    voice.VoiceInfo.Name));
         }
 
-        if (VoiceComboBox.Items.Count > 0)
+        _availableTtsVoices.AddRange(
+            windowsVoices);
+
+        if (_availableTtsVoices.Count > 0)
         {
             VoiceComboBox.SelectedIndex = 0;
         }
+
+        _ = LoadCachedExternalVoicesAsync();
     }
+
+    private async Task LoadCachedExternalVoicesAsync()
+    {
+        await Dispatcher.Yield(
+            DispatcherPriority.Background);
+
+        List<string> configuredProviderIds =
+            TtsProviderManager.Shared.Providers
+                .Where(
+                    provider =>
+                        provider.Status ==
+                            TtsProviderStatus.Configured ||
+                        provider.Status ==
+                            TtsProviderStatus.Connected)
+                .Select(
+                    provider => provider.ProviderId)
+                .ToList();
+
+        if (configuredProviderIds.Count == 0)
+        {
+            return;
+        }
+
+        HashSet<string> existingVoiceKeys =
+            _availableTtsVoices
+                .Select(
+                    voice =>
+                        $"{voice.ProviderId.ToUpperInvariant()}\n{voice.VoiceId}")
+                .ToHashSet(
+                    StringComparer.Ordinal);
+
+        (
+            List<TtsVoice> Voices,
+            string? SavedProviderId,
+            string? SavedVoiceId
+        ) result =
+            await Task.Run(
+                () =>
+                {
+                    SpeechSettings savedSpeechSettings =
+                        SpeechSettingsStore.Load();
+
+                    List<TtsVoice> voicesToAdd =
+                        [];
+
+                    HashSet<string> knownVoiceKeys =
+                        new(
+                            existingVoiceKeys,
+                            StringComparer.Ordinal);
+
+                    foreach (string providerId in
+                             configuredProviderIds)
+                    {
+                        IReadOnlyList<TtsVoice> catalog =
+                            TtsVoiceCatalogStore.Load(
+                                providerId);
+
+                        foreach (TtsVoice voice in catalog)
+                        {
+                            string voiceKey =
+                                $"{voice.ProviderId.ToUpperInvariant()}\n{voice.VoiceId}";
+
+                            if (!knownVoiceKeys.Add(
+                                    voiceKey))
+                            {
+                                continue;
+                            }
+
+                            voicesToAdd.Add(
+                                voice);
+                        }
+                    }
+
+                    return (
+                        voicesToAdd,
+                        savedSpeechSettings.VoiceProviderId,
+                        savedSpeechSettings.VoiceId);
+                });
+
+        _availableTtsVoices.AddRange(
+            result.Voices);
+
+        TtsVoice? savedVoice =
+            result.Voices.FirstOrDefault(
+                voice =>
+                    string.Equals(
+                        voice.ProviderId,
+                        result.SavedProviderId,
+                        StringComparison.OrdinalIgnoreCase) &&
+                    string.Equals(
+                        voice.VoiceId,
+                        result.SavedVoiceId,
+                        StringComparison.Ordinal));
+
+        if (savedVoice is not null)
+        {
+            VoiceComboBox.SelectedItem =
+                savedVoice;
+        }
+    }
+
+    private async Task LoadGoogleVoicesAsync()
+    {
+        TtsVoice? previouslySelectedVoice =
+            VoiceComboBox.SelectedItem as TtsVoice;
+
+        bool googleVoiceWasSelected =
+            previouslySelectedVoice is not null &&
+            string.Equals(
+                previouslySelectedVoice.ProviderId,
+                _googleTtsProvider.ProviderId,
+                StringComparison.OrdinalIgnoreCase);
+
+        _availableTtsVoices.RemoveAll(
+            voice =>
+                string.Equals(
+                    voice.ProviderId,
+                    _googleTtsProvider.ProviderId,
+                    StringComparison.OrdinalIgnoreCase));
+
+        if (_googleTtsProvider.Status ==
+                TtsProviderStatus.NotConfigured ||
+            _googleTtsProvider.Status ==
+                TtsProviderStatus.NeedsAttention)
+        {
+            if (googleVoiceWasSelected)
+            {
+                VoiceComboBox.SelectedItem =
+                    _availableTtsVoices.FirstOrDefault(
+                        voice =>
+                            string.Equals(
+                                voice.ProviderId,
+                                "windows",
+                                StringComparison.OrdinalIgnoreCase));
+            }
+
+            return;
+        }
+
+        try
+        {
+            IReadOnlyList<TtsVoice> googleVoices =
+                await _googleTtsProvider.GetVoicesAsync();
+
+            List<TtsVoice> orderedGoogleVoices =
+                googleVoices
+                    .OrderBy(
+                        voice => voice.DisplayName,
+                        StringComparer.OrdinalIgnoreCase)
+                    .ToList();
+
+            _availableTtsVoices.AddRange(
+                orderedGoogleVoices);
+
+            if (googleVoiceWasSelected)
+            {
+                TtsVoice? restoredGoogleVoice =
+                    orderedGoogleVoices.FirstOrDefault(
+                        voice =>
+                            string.Equals(
+                                voice.VoiceId,
+                                previouslySelectedVoice!.VoiceId,
+                                StringComparison.Ordinal));
+
+                VoiceComboBox.SelectedItem =
+                    restoredGoogleVoice ??
+                    _availableTtsVoices.FirstOrDefault(
+                        voice =>
+                            string.Equals(
+                                voice.ProviderId,
+                                "windows",
+                                StringComparison.OrdinalIgnoreCase));
+            }
+        }
+        catch
+        {
+            if (googleVoiceWasSelected)
+            {
+                VoiceComboBox.SelectedItem =
+                    _availableTtsVoices.FirstOrDefault(
+                        voice =>
+                            string.Equals(
+                                voice.ProviderId,
+                                "windows",
+                                StringComparison.OrdinalIgnoreCase));
+            }
+        }
+    }
+
 
     private void LoadAudioOutputDevices()
     {
@@ -433,6 +702,21 @@ public partial class MainWindow : Window
     {
         SpeakText(
             "This is a Chat Out Loud voice test.");
+    }
+
+    private async void ManageTtsProvidersButton_Click(
+        object sender,
+        RoutedEventArgs e)
+    {
+        TtsProviderWindow dialog =
+            new()
+            {
+                Owner = this
+            };
+
+        dialog.ShowDialog();
+
+        await LoadGoogleVoicesAsync();
     }
 
     private void ChooseJoinSoundButton_Click(
@@ -589,7 +873,7 @@ public partial class MainWindow : Window
         PlayNextQueuedSpeech();
     }
 
-    private void PlayNextQueuedSpeech()
+    private async void PlayNextQueuedSpeech()
     {
         if (_isSpeechPlaying ||
             _speechQueue.Count == 0)
@@ -597,8 +881,23 @@ public partial class MainWindow : Window
             return;
         }
 
-        if (VoiceComboBox.SelectedItem is not string voiceName ||
-            AudioOutputComboBox.SelectedItem is not AudioOutputDeviceOption outputDevice)
+        if (AudioOutputComboBox.SelectedItem
+            is not AudioOutputDeviceOption outputDevice)
+        {
+            _speechQueue.Clear();
+            UpdateQueueCount();
+            return;
+        }
+
+        TtsVoice? selectedVoice =
+            VoiceComboBox.SelectedItem as TtsVoice;
+
+        string? legacyWindowsVoiceName =
+            VoiceComboBox.SelectedItem as string;
+
+        if (selectedVoice is null &&
+            string.IsNullOrWhiteSpace(
+                legacyWindowsVoiceName))
         {
             _speechQueue.Clear();
             UpdateQueueCount();
@@ -612,53 +911,124 @@ public partial class MainWindow : Window
 
         _isSpeechPlaying = true;
 
-        _speechSynthesizer.SelectVoice(voiceName);
-
-        _speechSynthesizer.Volume =
-            (int)Math.Round(VolumeSlider.Value);
-
-        _speechSynthesizer.Rate =
-            (int)Math.Round(SpeechSpeedSlider.Value);
-
-        _ttsAudioStream = new MemoryStream();
-
-        _speechSynthesizer.SetOutputToWaveStream(
-            _ttsAudioStream);
-
-        _speechSynthesizer.Speak(
-            text);
-
-        _speechSynthesizer.SetOutputToNull();
-
-        _ttsAudioStream.Position = 0;
-
-        _ttsWaveReader =
-            new WaveFileReader(_ttsAudioStream);
-
-        WasapiPlayerBuilder playerBuilder =
-            new WasapiPlayerBuilder();
-
-        if (!string.IsNullOrWhiteSpace(outputDevice.DeviceId))
+        try
         {
-            using MMDeviceEnumerator enumerator = new();
+            bool useWindowsVoice =
+                selectedVoice is null ||
+                string.Equals(
+                    selectedVoice.ProviderId,
+                    "windows",
+                    StringComparison.OrdinalIgnoreCase);
 
-            _ttsAudioDevice =
-                enumerator.GetDevice(outputDevice.DeviceId);
+            if (useWindowsVoice)
+            {
+                string voiceName =
+                    selectedVoice?.VoiceId ??
+                    legacyWindowsVoiceName!;
 
-            playerBuilder.WithDevice(
-                _ttsAudioDevice);
+                _speechSynthesizer.SelectVoice(
+                    voiceName);
+
+                _speechSynthesizer.Volume =
+                    (int)Math.Round(
+                        VolumeSlider.Value);
+
+                _speechSynthesizer.Rate =
+                    (int)Math.Round(
+                        SpeechSpeedSlider.Value);
+
+                _ttsAudioStream =
+                    new MemoryStream();
+
+                _speechSynthesizer.SetOutputToWaveStream(
+                    _ttsAudioStream);
+
+                _speechSynthesizer.Speak(
+                    text);
+
+                _speechSynthesizer.SetOutputToNull();
+
+                _ttsAudioStream.Position =
+                    0;
+            }
+            else
+            {
+                ITtsProvider? provider =
+                    TtsProviderManager.Shared.GetProvider(
+                        selectedVoice!.ProviderId);
+
+                if (provider is null)
+                {
+                    throw new InvalidOperationException(
+                        $"TTS provider '{selectedVoice.ProviderName}' is not available.");
+                }
+
+                TtsAudioResult audioResult =
+                    await provider.SynthesizeSpeechAsync(
+                        text,
+                        selectedVoice);
+
+                _ttsAudioStream =
+                    new MemoryStream(
+                        audioResult.AudioData,
+                        writable: false);
+            }
+
+            _ttsWaveReader =
+                new WaveFileReader(
+                    _ttsAudioStream);
+
+            WasapiPlayerBuilder playerBuilder =
+                new();
+
+            if (!string.IsNullOrWhiteSpace(
+                    outputDevice.DeviceId))
+            {
+                using MMDeviceEnumerator enumerator =
+                    new();
+
+                _ttsAudioDevice =
+                    enumerator.GetDevice(
+                        outputDevice.DeviceId);
+
+                playerBuilder.WithDevice(
+                    _ttsAudioDevice);
+            }
+
+            _ttsAudioPlayer =
+                playerBuilder.Build();
+
+            _ttsAudioPlayer.PlaybackStopped +=
+                TtsAudioPlayer_PlaybackStopped;
+
+            _ttsAudioPlayer.Init(
+                _ttsWaveReader);
+
+            _ttsAudioPlayer.Play();
         }
+        catch (Exception ex)
+        {
+            _ttsWaveReader?.Dispose();
+            _ttsWaveReader = null;
 
-        _ttsAudioPlayer =
-            playerBuilder.Build();
+            _ttsAudioStream?.Dispose();
+            _ttsAudioStream = null;
 
-        _ttsAudioPlayer.PlaybackStopped +=
-            TtsAudioPlayer_PlaybackStopped;
+            _ttsAudioDevice?.Dispose();
+            _ttsAudioDevice = null;
 
-        _ttsAudioPlayer.Init(
-            _ttsWaveReader);
+            _isSpeechPlaying = false;
+            _isStoppingSpeechPlayback = false;
 
-        _ttsAudioPlayer.Play();
+            _speechQueue.Clear();
+            UpdateQueueCount();
+
+            MessageBox.Show(
+                $"TTS playback failed.\n\n{ex}",
+                "Chat Out Loud",
+                MessageBoxButton.OK,
+                MessageBoxImage.Error);
+        }
     }
 
     private void TtsAudioPlayer_PlaybackStopped(
@@ -764,8 +1134,89 @@ public partial class MainWindow : Window
         object? sender,
         EventArgs e)
     {
-        await LoadSharedChatSessionAsync();
-        await LoadCurrentTwitchChattersAsync();
+        try
+        {
+            await LoadSharedChatSessionAsync();
+            await LoadCurrentTwitchChattersAsync();
+        }
+        catch (InvalidOperationException ex)
+            when (ex.Message.Contains(
+                      "Unauthorized",
+                      StringComparison.OrdinalIgnoreCase) ||
+                  ex.Message.Contains(
+                      "\"status\":401",
+                      StringComparison.OrdinalIgnoreCase))
+        {
+            string? refreshToken =
+                _twitchRefreshToken;
+
+            if (string.IsNullOrWhiteSpace(refreshToken))
+            {
+                _twitchChattersRefreshTimer.Stop();
+
+                SetLiveConnectionState(false);
+
+                TwitchConnectionStatusText.Text =
+                    "Authorization expired - reconnect";
+
+                return;
+            }
+
+            try
+            {
+                TokenResponse? refreshedToken =
+                    await RefreshTwitchTokenAsync(
+                        refreshToken);
+
+                if (refreshedToken is null)
+                {
+                    _twitchChattersRefreshTimer.Stop();
+
+                    SetLiveConnectionState(false);
+
+                    TwitchConnectionStatusText.Text =
+                        "Authorization expired - reconnect";
+
+                    return;
+                }
+
+                _twitchAccessToken =
+                    refreshedToken.AccessToken;
+
+                _twitchRefreshToken =
+                    refreshedToken.RefreshToken;
+
+                TwitchTokenStore.Save(
+                    refreshedToken.AccessToken,
+                    refreshedToken.RefreshToken);
+
+                await LoadSharedChatSessionAsync();
+                await LoadCurrentTwitchChattersAsync();
+            }
+            catch
+            {
+                _twitchChattersRefreshTimer.Stop();
+
+                SetLiveConnectionState(false);
+
+                TwitchConnectionStatusText.Text =
+                    "Authorization expired - reconnect";
+            }
+        }
+        catch (HttpRequestException)
+        {
+        }
+        catch (TaskCanceledException)
+        {
+        }
+        catch (JsonException)
+        {
+        }
+        catch (InvalidOperationException)
+        {
+            TwitchConnectionStatusText.Text =
+                "Twitch roster temporarily unavailable";
+        }
     }
 
     private async void MainWindow_Loaded(
@@ -2382,6 +2833,38 @@ public partial class MainWindow : Window
         MutedPhrasesList.Items.Remove(phrase);
 
         MutedPhraseStore.Save(_mutedPhrases);
+    }
+
+    private void VoiceSearchTextBox_TextChanged(
+        object sender,
+        System.Windows.Controls.TextChangedEventArgs e)
+    {
+        if (sender is not System.Windows.Controls.TextBox searchTextBox)
+        {
+            return;
+        }
+
+        string searchText =
+            searchTextBox.Text.Trim();
+
+        VoiceComboBox.Items.Filter =
+            item =>
+            {
+                if (item is not TtsVoice voice)
+                {
+                    return false;
+                }
+
+                return string.IsNullOrWhiteSpace(searchText) ||
+                       voice.DisplayName.Contains(
+                           searchText,
+                           StringComparison.OrdinalIgnoreCase) ||
+                       voice.ProviderName.Contains(
+                           searchText,
+                           StringComparison.OrdinalIgnoreCase);
+            };
+
+        VoiceComboBox.Items.Refresh();
     }
 
     private void UserSearchTextBox_TextChanged(
