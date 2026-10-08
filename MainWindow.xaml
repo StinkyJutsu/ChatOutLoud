@@ -6,8 +6,8 @@
         Title="Chat Out Loud"
         Width="1100"
         Height="720"
-        MinWidth="950"
-        MinHeight="650"
+        MinWidth="1120"
+        MinHeight="680"
         WindowStartupLocation="CenterScreen"
         WindowStyle="None"
         ResizeMode="CanResize"
@@ -32,6 +32,94 @@
             <Setter Property="BorderThickness" Value="1"/>
             <Setter Property="CornerRadius" Value="14"/>
             <Setter Property="Padding" Value="18"/>
+        </Style>
+
+        <!-- SECTION HELP BUTTON -->
+        <Style x:Key="SectionHelpButton"
+               TargetType="Button">
+
+            <Setter Property="Background"
+                    Value="Transparent"/>
+
+            <Setter Property="Foreground"
+                    Value="#AAB5CA"/>
+
+            <Setter Property="BorderThickness"
+                    Value="0"/>
+
+            <Setter Property="Padding"
+                    Value="0"/>
+
+            <Setter Property="Cursor"
+                    Value="Hand"/>
+
+            <Setter Property="FontSize"
+                    Value="12"/>
+
+            <Setter Property="FontWeight"
+                    Value="SemiBold"/>
+
+            <Setter Property="Opacity"
+                    Value="0.82"/>
+
+            <Setter Property="Template">
+                <Setter.Value>
+
+                    <ControlTemplate TargetType="Button">
+
+                        <Grid Background="Transparent">
+
+                            <StackPanel Orientation="Horizontal"
+                                        VerticalAlignment="Center">
+
+                                <Border Width="20"
+                                        Height="20"
+                                        CornerRadius="10"
+                                        Background="#0B1222"
+                                        BorderBrush="#55D9FF"
+                                        BorderThickness="1">
+
+                                    <TextBlock Text="?"
+                                               Foreground="#55D9FF"
+                                               FontSize="13"
+                                               FontWeight="SemiBold"
+                                               HorizontalAlignment="Center"
+                                               VerticalAlignment="Center"/>
+
+                                </Border>
+
+                                <ContentPresenter Margin="6,0,0,0"
+                                                  VerticalAlignment="Center"/>
+
+                            </StackPanel>
+
+                        </Grid>
+
+                        <ControlTemplate.Triggers>
+
+                            <Trigger Property="IsMouseOver"
+                                     Value="True">
+
+                                <Setter Property="Opacity"
+                                        Value="1"/>
+
+                            </Trigger>
+
+                            <Trigger Property="IsPressed"
+                                     Value="True">
+
+                                <Setter Property="Opacity"
+                                        Value="0.60"/>
+
+                            </Trigger>
+
+                        </ControlTemplate.Triggers>
+
+                    </ControlTemplate>
+
+                </Setter.Value>
+            </Setter>
+
         </Style>
 
         <!-- BUTTONS -->
@@ -316,12 +404,15 @@
                                         BorderBrush="#314766"
                                         BorderThickness="1"
                                         CornerRadius="8"
-                                        MinWidth="{Binding ActualWidth,
-                                                           RelativeSource={RelativeSource TemplatedParent}}">
+                                        Margin="0,4,0,0"
+                                        Width="{Binding ActualWidth,
+                                            RelativeSource={RelativeSource TemplatedParent}}">
 
                                     <ScrollViewer MaxHeight="220"
+                                                  Background="Transparent"
                                                   VerticalScrollBarVisibility="Auto"
-                                                  HorizontalScrollBarVisibility="Disabled">
+                                                  HorizontalScrollBarVisibility="Disabled"
+                                                  CanContentScroll="False">
                                         <ItemsPresenter/>
                                     </ScrollViewer>
 
@@ -341,6 +432,45 @@
             <Setter Property="Background" Value="#10172A"/>
             <Setter Property="Foreground" Value="#F4F7FF"/>
             <Setter Property="Padding" Value="10,8"/>
+            <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ComboBoxItem">
+
+                        <Border x:Name="ComboItemBorder"
+                                Background="{TemplateBinding Background}"
+                                CornerRadius="6"
+                                Margin="2">
+
+                            <ContentPresenter Margin="{TemplateBinding Padding}"
+                                              HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                              VerticalAlignment="Center"/>
+
+                        </Border>
+
+                        <ControlTemplate.Triggers>
+
+                            <Trigger Property="IsMouseOver"
+                                     Value="True">
+                                <Setter TargetName="ComboItemBorder"
+                                        Property="Background"
+                                        Value="#182640"/>
+                            </Trigger>
+
+                            <Trigger Property="IsSelected"
+                                     Value="True">
+                                <Setter TargetName="ComboItemBorder"
+                                        Property="Background"
+                                        Value="#16324A"/>
+                            </Trigger>
+
+                        </ControlTemplate.Triggers>
+
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+
         </Style>
 
         <!-- CHECK BOX -->
@@ -352,6 +482,79 @@
         <!-- SLIDERS -->
         <Style TargetType="Slider">
             <Setter Property="Margin" Value="0,8"/>
+
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Slider">
+
+                        <Grid Height="20">
+
+                            <Track x:Name="PART_Track"
+                                   VerticalAlignment="Center"
+                                   Minimum="{TemplateBinding Minimum}"
+                                   Maximum="{TemplateBinding Maximum}"
+                                   Value="{TemplateBinding Value}">
+
+                                <Track.DecreaseRepeatButton>
+                                    <RepeatButton Command="{x:Static Slider.DecreaseLarge}"
+                                                  Background="White"
+                                                  BorderThickness="0"
+                                                  Height="2"
+                                                  VerticalAlignment="Center"/>
+                                </Track.DecreaseRepeatButton>
+
+                                <Track.Thumb>
+                                    <Thumb Width="14"
+                                           Height="14"
+                                           Background="#344868">
+
+                                        <Thumb.Template>
+                                            <ControlTemplate TargetType="Thumb">
+
+                                                <Border x:Name="SliderThumbBorder"
+                                                        Background="{TemplateBinding Background}"
+                                                        CornerRadius="5"/>
+
+                                                <ControlTemplate.Triggers>
+
+                                                    <Trigger Property="IsMouseOver"
+                                                             Value="True">
+                                                        <Setter TargetName="SliderThumbBorder"
+                                                                Property="Background"
+                                                                Value="#496083"/>
+                                                    </Trigger>
+
+                                                    <Trigger Property="IsDragging"
+                                                             Value="True">
+                                                        <Setter TargetName="SliderThumbBorder"
+                                                                Property="Background"
+                                                                Value="#55D9FF"/>
+                                                    </Trigger>
+
+                                                </ControlTemplate.Triggers>
+
+                                            </ControlTemplate>
+                                        </Thumb.Template>
+
+                                    </Thumb>
+                                </Track.Thumb>
+
+                                <Track.IncreaseRepeatButton>
+                                    <RepeatButton Command="{x:Static Slider.IncreaseLarge}"
+                                                  Background="White"
+                                                  BorderThickness="0"
+                                                  Height="2"
+                                                  VerticalAlignment="Center"/>
+                                </Track.IncreaseRepeatButton>
+
+                            </Track>
+
+                        </Grid>
+
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+
         </Style>
 
         <!-- DARK SCROLLBARS -->
@@ -384,7 +587,7 @@
                         <Border x:Name="ThumbBorder"
                                 Background="{TemplateBinding Background}"
                                 CornerRadius="5"
-                                Margin="2"/>
+                                Margin="2,0"/>
 
                         <ControlTemplate.Triggers>
 
@@ -418,7 +621,7 @@
         <ControlTemplate x:Key="VerticalScrollBarTemplate"
                          TargetType="ScrollBar">
 
-            <Grid Width="12"
+            <Grid Width="16"
                   Background="Transparent">
 
                 <Track x:Name="PART_Track"
@@ -426,7 +629,7 @@
                        Minimum="{TemplateBinding Minimum}"
                        Maximum="{TemplateBinding Maximum}"
                        Value="{TemplateBinding Value}"
-                       ViewportSize="{TemplateBinding ViewportSize}"
+                       ViewportSize="NaN"
                        IsDirectionReversed="True">
 
                     <Track.DecreaseRepeatButton>
@@ -439,7 +642,7 @@
                     <Track.Thumb>
 
                         <Thumb Style="{StaticResource ScrollThumb}"
-                               MinHeight="24"/>
+                               Height="30"/>
 
                     </Track.Thumb>
 
@@ -510,7 +713,7 @@
                          Value="Vertical">
 
                     <Setter Property="Width"
-                            Value="12"/>
+                            Value="16"/>
 
                     <Setter Property="Template"
                             Value="{StaticResource VerticalScrollBarTemplate}"/>
@@ -590,6 +793,19 @@
 
 
                         </Grid>
+
+                        <ControlTemplate.Triggers>
+
+                            <Trigger Property="Tag"
+                                     Value="MainWindowScroll">
+
+                                <Setter TargetName="PART_VerticalScrollBar"
+                                        Property="Margin"
+                                        Value="0,8,0,8"/>
+
+                            </Trigger>
+
+                        </ControlTemplate.Triggers>
 
                     </ControlTemplate>
 
@@ -686,9 +902,31 @@
 
             <!-- MAIN SCROLL AREA -->
             <ScrollViewer Grid.Row="1"
-                          VerticalScrollBarVisibility="Auto"
-                          HorizontalScrollBarVisibility="Auto"
-                          CanContentScroll="False">
+                          HorizontalScrollBarVisibility="Disabled"
+                          CanContentScroll="False"
+                          Margin="0,0,7,0"
+                          Tag="MainWindowScroll">
+
+                <ScrollViewer.Style>
+                    <Style TargetType="ScrollViewer"
+                           BasedOn="{StaticResource {x:Type ScrollViewer}}">
+
+                        <Setter Property="VerticalScrollBarVisibility"
+                                Value="Auto"/>
+
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding WindowState,
+                                                          RelativeSource={RelativeSource AncestorType={x:Type Window}}}"
+                                         Value="Maximized">
+
+                                <Setter Property="VerticalScrollBarVisibility"
+                                        Value="Disabled"/>
+
+                            </DataTrigger>
+                        </Style.Triggers>
+
+                    </Style>
+                </ScrollViewer.Style>
 
                 <Grid Margin="20"
                       MinWidth="1040"
@@ -723,10 +961,27 @@
 
                                 <StackPanel>
 
-                                    <TextBlock Text="TWITCH CONNECTION"
-                                               Foreground="#55D9FF"
-                                               FontWeight="SemiBold"
-                                               FontSize="14"/>
+                                    <Grid>
+
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+
+                                        <TextBlock Grid.Column="0"
+                                                   Text="TWITCH CONNECTION"
+                                                   Foreground="#55D9FF"
+                                                   FontWeight="SemiBold"
+                                                   FontSize="14"
+                                                   VerticalAlignment="Center"/>
+
+                                        <Button Grid.Column="1"
+                                                Content="Help"
+                                                Style="{StaticResource SectionHelpButton}"
+                                                VerticalAlignment="Center"
+                                                Click="TwitchConnectionHelpButton_Click"/>
+
+                                    </Grid>
 
                                     <!-- TWITCH ACCOUNT PROFILE -->
                                     <StackPanel Orientation="Horizontal"
@@ -780,14 +1035,32 @@
                             </Border>
 
                             <Border Grid.Row="2"
-                                    Style="{StaticResource PanelStyle}">
+                                    Style="{StaticResource PanelStyle}"
+                                    Margin="0,0,0,3">
 
                                 <StackPanel>
 
-                                    <TextBlock Text="SPEECH CONTROL"
-                                               Foreground="#55D9FF"
-                                               FontWeight="SemiBold"
-                                               FontSize="14"/>
+                                    <Grid>
+
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+
+                                        <TextBlock Grid.Column="0"
+                                                   Text="SPEECH CONTROL"
+                                                   Foreground="#55D9FF"
+                                                   FontWeight="SemiBold"
+                                                   FontSize="14"
+                                                   VerticalAlignment="Center"/>
+
+                                        <Button Grid.Column="1"
+                                                Content="Help"
+                                                Style="{StaticResource SectionHelpButton}"
+                                                VerticalAlignment="Center"
+                                                Click="SpeechControlHelpButton_Click"/>
+
+                                    </Grid>
 
                                     <StackPanel Orientation="Horizontal"
                                                 Margin="0,12,0,10">
@@ -829,10 +1102,15 @@
                                         <Grid.ColumnDefinitions>
                                             <ColumnDefinition Width="*"/>
                                             <ColumnDefinition Width="Auto"/>
+                                            <ColumnDefinition Width="Auto"/>
                                         </Grid.ColumnDefinitions>
 
                                         <ComboBox x:Name="VoiceComboBox"
-                                                  SelectedIndex="0">
+                                                  SelectedIndex="0"
+                                                  VirtualizingPanel.IsVirtualizing="True"
+                                                  VirtualizingPanel.IsVirtualizingWhenGrouping="True"
+                                                  VirtualizingPanel.VirtualizationMode="Recycling"
+                                                  VirtualizingPanel.ScrollUnit="Pixel">
 
                                             <ComboBox.Resources>
 
@@ -893,50 +1171,7 @@
                                                     </Setter>
                                                 </Style>
 
-                                                <Style TargetType="ScrollBar">
-                                                    <Setter Property="Width"
-                                                            Value="14"/>
 
-                                                    <Setter Property="Template">
-                                                        <Setter.Value>
-                                                            <ControlTemplate TargetType="ScrollBar">
-
-                                                                <Border Background="#17213A"
-                                                                        CornerRadius="7"
-                                                                        Width="14">
-
-                                                                    <Track x:Name="PART_Track"
-                                                                           Orientation="Vertical"
-                                                                           Minimum="{TemplateBinding Minimum}"
-                                                                           Maximum="{TemplateBinding Maximum}"
-                                                                           Value="{TemplateBinding Value}"
-                                                                           ViewportSize="{TemplateBinding ViewportSize}"
-                                                                           IsDirectionReversed="True"
-                                                                           Margin="2">
-
-                                                                        <Track.DecreaseRepeatButton>
-                                                                            <RepeatButton Style="{StaticResource ScrollRepeatButton}"
-                                                                                          Command="{x:Static ScrollBar.PageUpCommand}"/>
-                                                                        </Track.DecreaseRepeatButton>
-
-                                                                        <Track.Thumb>
-                                                                            <Thumb Style="{StaticResource ScrollThumb}"
-                                                                                   MinHeight="28"/>
-                                                                        </Track.Thumb>
-
-                                                                        <Track.IncreaseRepeatButton>
-                                                                            <RepeatButton Style="{StaticResource ScrollRepeatButton}"
-                                                                                          Command="{x:Static ScrollBar.PageDownCommand}"/>
-                                                                        </Track.IncreaseRepeatButton>
-
-                                                                    </Track>
-
-                                                                </Border>
-
-                                                            </ControlTemplate>
-                                                        </Setter.Value>
-                                                    </Setter>
-                                                </Style>
 
                                             </ComboBox.Resources>
 
@@ -995,8 +1230,8 @@
                                                                     BorderThickness="1"
                                                                     CornerRadius="10"
                                                                     Margin="0,4,0,0"
-                                                                    MinWidth="{Binding ActualWidth,
-                                                                                       RelativeSource={RelativeSource TemplatedParent}}">
+                                                                    Width="{Binding ActualWidth,
+                                                                                  RelativeSource={RelativeSource TemplatedParent}}">
 
                                                                 <Grid Margin="4">
 
@@ -1014,11 +1249,64 @@
                                                                              TextChanged="VoiceSearchTextBox_TextChanged"/>
 
                                                                     <ScrollViewer Grid.Row="1"
-                                                                                  MaxHeight="280"
+                                                                                  MaxHeight="360"
                                                                                   Margin="4,0,4,4"
+                                                                                  Background="Transparent"
                                                                                   VerticalScrollBarVisibility="Visible"
                                                                                   HorizontalScrollBarVisibility="Disabled"
-                                                                                  CanContentScroll="True">
+                                                                                  CanContentScroll="True"
+                                                                                  ScrollChanged="VoiceListScrollViewer_ScrollChanged"
+                                                                                  PreviewMouseWheel="VoiceListScrollViewer_PreviewMouseWheel">
+
+                                                                        <ScrollViewer.Resources>
+
+                                                                            <Style TargetType="ScrollBar">
+                                                                                <Setter Property="Width"
+                                                                                        Value="16"/>
+
+                                                                                <Setter Property="Template">
+                                                                                    <Setter.Value>
+
+                                                                                        <ControlTemplate TargetType="ScrollBar">
+
+                                                                                            <Grid Width="16"
+                                                                                                  Background="Transparent">
+
+                                                                                                <Track x:Name="PART_Track"
+                                                                                                       Orientation="Vertical"
+                                                                                                       Minimum="{TemplateBinding Minimum}"
+                                                                                                       Maximum="{TemplateBinding Maximum}"
+                                                                                                       Value="{TemplateBinding Value}"
+                                                                                                       ViewportSize="NaN"
+                                                                                                       IsDirectionReversed="True">
+
+                                                                                                    <Track.DecreaseRepeatButton>
+                                                                                                        <RepeatButton Style="{StaticResource ScrollRepeatButton}"
+                                                                                                                      Command="{x:Static ScrollBar.PageUpCommand}"/>
+                                                                                                    </Track.DecreaseRepeatButton>
+
+                                                                                                    <Track.Thumb>
+                                                                                                        <Thumb Style="{StaticResource ScrollThumb}"
+                                                                                                               Height="30"/>
+                                                                                                    </Track.Thumb>
+
+                                                                                                    <Track.IncreaseRepeatButton>
+                                                                                                        <RepeatButton Style="{StaticResource ScrollRepeatButton}"
+                                                                                                                      Command="{x:Static ScrollBar.PageDownCommand}"/>
+                                                                                                    </Track.IncreaseRepeatButton>
+
+                                                                                                </Track>
+
+                                                                                            </Grid>
+
+                                                                                        </ControlTemplate>
+
+                                                                                    </Setter.Value>
+                                                                                </Setter>
+
+                                                                            </Style>
+
+                                                                        </ScrollViewer.Resources>
 
                                                                         <ItemsPresenter/>
 
@@ -1052,20 +1340,11 @@
 
                                             <ComboBox.ItemTemplate>
                                                 <DataTemplate>
-                                                    <Grid>
-                                                        <Grid.ColumnDefinitions>
-                                                            <ColumnDefinition Width="*"/>
-                                                            <ColumnDefinition Width="Auto"/>
-                                                        </Grid.ColumnDefinitions>
-
+                                                     <Grid>
                                                         <TextBlock Text="{Binding DisplayName}"
-                                                                   Foreground="#F4F7FF"/>
-
-                                                        <TextBlock Grid.Column="1"
-                                                                   Margin="16,0,0,0"
-                                                                   Text="{Binding ProviderName}"
-                                                                   Foreground="#7F8CA5"
-                                                                   FontSize="11"/>
+                                                                   Foreground="#F4F7FF"
+                                                                   TextTrimming="CharacterEllipsis"
+                                                                   TextWrapping="NoWrap"/>
                                                     </Grid>
                                                 </DataTemplate>
                                             </ComboBox.ItemTemplate>
@@ -1088,7 +1367,20 @@
 
                                         </ComboBox>
 
-                                        <Button Grid.Column="1"
+                                        <Button x:Name="RefreshVoicesButton"
+                                                Grid.Column="1"
+                                                Width="42"
+                                                Content="⟳"
+                                                Margin="10,0,0,0"
+                                                Padding="0"
+                                                FontFamily="Segoe UI Symbol"
+                                                FontSize="16"
+                                                HorizontalContentAlignment="Center"
+                                                VerticalContentAlignment="Center"
+                                                Style="{StaticResource NormalButton}"
+                                                Click="RefreshVoicesButton_Click"/>
+
+                                        <Button Grid.Column="2"
                                                 Content="Manage TTS Providers"
                                                 Margin="10,0,0,0"
                                                 Style="{StaticResource NormalButton}"
@@ -1169,7 +1461,70 @@
 
                                     <ComboBox x:Name="AudioOutputComboBox"
                                               SelectedIndex="0"
-                                              SelectionChanged="AudioOutputComboBox_SelectionChanged"/>
+                                              SelectionChanged="AudioOutputComboBox_SelectionChanged">
+
+                                        <ComboBox.Resources>
+
+                                            <Style TargetType="ComboBoxItem">
+                                                <Setter Property="Background"
+                                                        Value="#10172A"/>
+                                                <Setter Property="Foreground"
+                                                        Value="#F4F7FF"/>
+                                                <Setter Property="Padding"
+                                                        Value="10,8"/>
+                                                <Setter Property="HorizontalContentAlignment"
+                                                        Value="Stretch"/>
+                                                <Setter Property="BorderBrush"
+                                                        Value="Transparent"/>
+                                                <Setter Property="BorderThickness"
+                                                        Value="1"/>
+
+                                                <Setter Property="Template">
+                                                    <Setter.Value>
+                                                        <ControlTemplate TargetType="ComboBoxItem">
+
+                                                            <Border x:Name="AudioOutputItemBorder"
+                                                                    Background="{TemplateBinding Background}"
+                                                                    BorderBrush="{TemplateBinding BorderBrush}"
+                                                                    BorderThickness="{TemplateBinding BorderThickness}"
+                                                                    CornerRadius="6"
+                                                                    Margin="1">
+
+                                                                <ContentPresenter Margin="{TemplateBinding Padding}"
+                                                                                  HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                                                                  VerticalAlignment="Center"/>
+
+                                                            </Border>
+
+                                                            <ControlTemplate.Triggers>
+
+                                                                <Trigger Property="IsMouseOver"
+                                                                         Value="True">
+                                                                    <Setter TargetName="AudioOutputItemBorder"
+                                                                            Property="Background"
+                                                                            Value="#182640"/>
+                                                                </Trigger>
+
+                                                                <Trigger Property="IsSelected"
+                                                                         Value="True">
+                                                                    <Setter TargetName="AudioOutputItemBorder"
+                                                                            Property="Background"
+                                                                            Value="#16324A"/>
+                                                                    <Setter TargetName="AudioOutputItemBorder"
+                                                                            Property="BorderBrush"
+                                                                            Value="#55D9FF"/>
+                                                                </Trigger>
+
+                                                            </ControlTemplate.Triggers>
+
+                                                        </ControlTemplate>
+                                                    </Setter.Value>
+                                                </Setter>
+                                            </Style>
+
+                                        </ComboBox.Resources>
+
+                                    </ComboBox>
                                     <StackPanel Orientation="Horizontal">
 
                                         <Button Content="Refresh Devices"
@@ -1197,9 +1552,9 @@
                         <Grid Grid.Column="2">
 
                             <Grid.RowDefinitions>
-                                <RowDefinition Height="340"/>
+                                <RowDefinition Height="400"/>
                                 <RowDefinition Height="14"/>
-                                <RowDefinition Height="340"/>
+                                <RowDefinition Height="400"/>
                                 <RowDefinition Height="14"/>
                                 <RowDefinition Height="Auto"/>
                             </Grid.RowDefinitions>
@@ -1216,14 +1571,33 @@
                                         <RowDefinition Height="Auto"/>
                                     </Grid.RowDefinitions>
 
-                                    <TextBlock Text="USERS / BOTS"
-                                               Foreground="#55D9FF"
-                                               FontWeight="SemiBold"
-                                               FontSize="14"/>
+                                    <Grid>
+
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+
+                                        <TextBlock Grid.Column="0"
+                                                   Text="VIEWERS / BOTS"
+                                                   Foreground="#55D9FF"
+                                                   FontWeight="SemiBold"
+                                                   FontSize="14"
+                                                   VerticalAlignment="Center"/>
+
+                                        <Button Grid.Column="1"
+                                                Content="Help"
+                                                Style="{StaticResource SectionHelpButton}"
+                                                VerticalAlignment="Center"
+                                                Click="ViewersBotsHelpButton_Click"/>
+
+                                    </Grid>
 
                                     <TextBox x:Name="UserSearchTextBox"
                                              Grid.Row="1"
                                              Margin="0,12,0,8"
+                                             HorizontalScrollBarVisibility="Auto"
+                                             TextWrapping="NoWrap"
                                              TextChanged="UserSearchTextBox_TextChanged"/>
 
                                     <ListBox x:Name="DetectedUsersList"
@@ -1231,7 +1605,10 @@
                                              SelectionChanged="DetectedUsersList_SelectionChanged"
                                              LostKeyboardFocus="DetectedUsersList_LostKeyboardFocus"
                                              ScrollViewer.VerticalScrollBarVisibility="Auto"
-                                             ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+                                             ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                                             VirtualizingPanel.IsVirtualizing="True"
+                                             VirtualizingPanel.VirtualizationMode="Recycling"
+                                             VirtualizingPanel.ScrollUnit="Pixel">
 
                                         <ListBox.Resources>
                                             <SolidColorBrush x:Key="{x:Static SystemColors.InactiveSelectionHighlightBrushKey}"
@@ -1277,10 +1654,27 @@
                                         <RowDefinition Height="Auto"/>
                                     </Grid.RowDefinitions>
 
-                                    <TextBlock Text="MUTED WORDS / PHRASES"
-                                               Foreground="#55D9FF"
-                                               FontWeight="SemiBold"
-                                               FontSize="14"/>
+                                    <Grid>
+
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+
+                                        <TextBlock Grid.Column="0"
+                                                   Text="MUTED WORDS / PHRASES"
+                                                   Foreground="#55D9FF"
+                                                   FontWeight="SemiBold"
+                                                   FontSize="14"
+                                                   VerticalAlignment="Center"/>
+
+                                        <Button Grid.Column="1"
+                                                Content="Help"
+                                                Style="{StaticResource SectionHelpButton}"
+                                                VerticalAlignment="Center"
+                                                Click="MutedWordsPhrasesHelpButton_Click"/>
+
+                                    </Grid>
 
                                     <Grid Grid.Row="1"
                                           Margin="0,12,0,8">
@@ -1293,7 +1687,9 @@
                                         <TextBox x:Name="MutedPhraseInput"
                                                  Height="36"
                                                  Padding="10,0"
-                                                 VerticalContentAlignment="Center"/>
+                                                 VerticalContentAlignment="Center"
+                                                 HorizontalScrollBarVisibility="Auto"
+                                                 TextWrapping="NoWrap"/>
 
                                         <Button Grid.Column="1"
                                                 Content="Add"
@@ -1306,8 +1702,13 @@
                                     <ListBox x:Name="MutedPhrasesList"
                                              Grid.Row="2"
                                              Margin="0,0,0,8"
+                                             SelectionChanged="MutedPhrasesList_SelectionChanged"
+                                             LostKeyboardFocus="MutedPhrasesList_LostKeyboardFocus"
                                              ScrollViewer.VerticalScrollBarVisibility="Auto"
-                                             ScrollViewer.HorizontalScrollBarVisibility="Disabled"/>
+                                             ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                                             VirtualizingPanel.IsVirtualizing="True"
+                                             VirtualizingPanel.VirtualizationMode="Recycling"
+                                             VirtualizingPanel.ScrollUnit="Pixel"/>
 
                                     <StackPanel Grid.Row="3">
 
@@ -1355,14 +1756,32 @@
                             </Border>
 
                             <Border Grid.Row="4"
-                                    Style="{StaticResource PanelStyle}">
+                                    Style="{StaticResource PanelStyle}"
+                                    Margin="0,0,0,3">
 
                                 <StackPanel>
 
-                                    <TextBlock Text="CHAT JOIN SOUND"
-                                               Foreground="#55D9FF"
-                                               FontWeight="SemiBold"
-                                               FontSize="14"/>
+                                    <Grid>
+
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+
+                                        <TextBlock Grid.Column="0"
+                                                   Text="CHAT JOIN SOUND"
+                                                   Foreground="#55D9FF"
+                                                   FontWeight="SemiBold"
+                                                   FontSize="14"
+                                                   VerticalAlignment="Center"/>
+
+                                        <Button Grid.Column="1"
+                                                Content="Help"
+                                                Style="{StaticResource SectionHelpButton}"
+                                                VerticalAlignment="Center"
+                                                Click="ChatJoinSoundHelpButton_Click"/>
+
+                                    </Grid>
 
                                     <Grid Margin="0,10,0,5">
 
@@ -1444,23 +1863,6 @@
                             </Border>
 
                         </Grid>
-
-                    </Grid>
-
-                    <!-- FOOTER -->
-                    <Grid Grid.Row="2">
-
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*"/>
-                            <ColumnDefinition Width="Auto"/>
-                        </Grid.ColumnDefinitions>
-
-                        <TextBlock Text="Status: Stopped"
-                                   Foreground="#AAB5CA"/>
-
-                        <TextBlock Grid.Column="1"
-                                   Text="Chat Out Loud v0.1"
-                                   Foreground="#566078"/>
 
                     </Grid>
 

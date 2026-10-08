@@ -392,16 +392,19 @@
 
                                     </StackPanel>
 
-                                    <TextBlock Grid.Column="1"
+                                    <TextBlock x:Name="ElevenLabsStatusText"
+                                               Grid.Column="1"
                                                Text="Not configured"
                                                Foreground="#7787A4"
                                                Margin="15,0"
                                                VerticalAlignment="Center"/>
 
-                                    <Button Grid.Column="2"
+                                    <Button x:Name="ElevenLabsConfigureButton"
+                                            Grid.Column="2"
                                             Content="Configure"
                                             Width="100"
-                                            Style="{StaticResource NormalButton}"/>
+                                            Style="{StaticResource NormalButton}"
+                                            Click="ElevenLabsConfigureButton_Click"/>
 
                                 </Grid>
 
@@ -471,168 +474,19 @@
 
                                     </StackPanel>
 
-                                    <TextBlock Grid.Column="1"
+                                    <TextBlock x:Name="AzureStatusText"
+                                               Grid.Column="1"
                                                Text="Not configured"
                                                Foreground="#7787A4"
                                                Margin="15,0"
                                                VerticalAlignment="Center"/>
 
-                                    <Button Grid.Column="2"
+                                    <Button x:Name="AzureConfigureButton"
+                                            Grid.Column="2"
                                             Content="Configure"
                                             Width="100"
-                                            Style="{StaticResource NormalButton}"/>
-
-                                </Grid>
-
-                            </Border>
-
-                            <!-- AMAZON POLLY -->
-                            <Border Style="{StaticResource ProviderCardStyle}">
-
-                                <Grid>
-
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="*"/>
-                                        <ColumnDefinition Width="Auto"/>
-                                        <ColumnDefinition Width="Auto"/>
-                                    </Grid.ColumnDefinitions>
-
-                                    <StackPanel>
-
-                                        <TextBlock Text="Amazon Polly"
-                                                   FontSize="14"
-                                                   FontWeight="SemiBold"/>
-
-                                        <TextBlock Text="Amazon Web Services text-to-speech voices"
-                                                   Foreground="#AAB5CA"
-                                                   Margin="0,4,0,0"/>
-
-                                    </StackPanel>
-
-                                    <TextBlock Grid.Column="1"
-                                               Text="Not configured"
-                                               Foreground="#7787A4"
-                                               Margin="15,0"
-                                               VerticalAlignment="Center"/>
-
-                                    <Button Grid.Column="2"
-                                            Content="Configure"
-                                            Width="100"
-                                            Style="{StaticResource NormalButton}"/>
-
-                                </Grid>
-
-                            </Border>
-
-                            <!-- DEEPGRAM -->
-                            <Border Style="{StaticResource ProviderCardStyle}">
-
-                                <Grid>
-
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="*"/>
-                                        <ColumnDefinition Width="Auto"/>
-                                        <ColumnDefinition Width="Auto"/>
-                                    </Grid.ColumnDefinitions>
-
-                                    <StackPanel>
-
-                                        <TextBlock Text="Deepgram"
-                                                   FontSize="14"
-                                                   FontWeight="SemiBold"/>
-
-                                        <TextBlock Text="Cloud text-to-speech voices"
-                                                   Foreground="#AAB5CA"
-                                                   Margin="0,4,0,0"/>
-
-                                    </StackPanel>
-
-                                    <TextBlock Grid.Column="1"
-                                               Text="Not configured"
-                                               Foreground="#7787A4"
-                                               Margin="15,0"
-                                               VerticalAlignment="Center"/>
-
-                                    <Button Grid.Column="2"
-                                            Content="Configure"
-                                            Width="100"
-                                            Style="{StaticResource NormalButton}"/>
-
-                                </Grid>
-
-                            </Border>
-
-                            <!-- CARTESIA -->
-                            <Border Style="{StaticResource ProviderCardStyle}">
-
-                                <Grid>
-
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="*"/>
-                                        <ColumnDefinition Width="Auto"/>
-                                        <ColumnDefinition Width="Auto"/>
-                                    </Grid.ColumnDefinitions>
-
-                                    <StackPanel>
-
-                                        <TextBlock Text="Cartesia"
-                                                   FontSize="14"
-                                                   FontWeight="SemiBold"/>
-
-                                        <TextBlock Text="Low-latency text-to-speech voices"
-                                                   Foreground="#AAB5CA"
-                                                   Margin="0,4,0,0"/>
-
-                                    </StackPanel>
-
-                                    <TextBlock Grid.Column="1"
-                                               Text="Not configured"
-                                               Foreground="#7787A4"
-                                               Margin="15,0"
-                                               VerticalAlignment="Center"/>
-
-                                    <Button Grid.Column="2"
-                                            Content="Configure"
-                                            Width="100"
-                                            Style="{StaticResource NormalButton}"/>
-
-                                </Grid>
-
-                            </Border>
-
-                            <!-- PLAYHT / PLAYAI -->
-                            <Border Style="{StaticResource ProviderCardStyle}">
-
-                                <Grid>
-
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="*"/>
-                                        <ColumnDefinition Width="Auto"/>
-                                        <ColumnDefinition Width="Auto"/>
-                                    </Grid.ColumnDefinitions>
-
-                                    <StackPanel>
-
-                                        <TextBlock Text="PlayHT / PlayAI"
-                                                   FontSize="14"
-                                                   FontWeight="SemiBold"/>
-
-                                        <TextBlock Text="Cloud text-to-speech voices"
-                                                   Foreground="#AAB5CA"
-                                                   Margin="0,4,0,0"/>
-
-                                    </StackPanel>
-
-                                    <TextBlock Grid.Column="1"
-                                               Text="Not configured"
-                                               Foreground="#7787A4"
-                                               Margin="15,0"
-                                               VerticalAlignment="Center"/>
-
-                                    <Button Grid.Column="2"
-                                            Content="Configure"
-                                            Width="100"
-                                            Style="{StaticResource NormalButton}"/>
+                                            Style="{StaticResource NormalButton}"
+                                            Click="AzureConfigureButton_Click"/>
 
                                 </Grid>
 
@@ -744,7 +598,8 @@
                             <TextBlock x:Name="GoogleSetupStatusText"
                                        Text="Not configured"
                                        Foreground="#7787A4"
-                                       Margin="0,5,0,0"/>
+                                       Margin="0,5,0,0"
+                                       TextWrapping="Wrap"/>
 
                         </StackPanel>
 
@@ -779,6 +634,278 @@
                             Click="GoogleHelpButton_Click"/>
 
                 </Grid>
+
+            </Border>
+
+            <!-- ELEVENLABS SETUP -->
+            <Border x:Name="ElevenLabsSetupView"
+                    Grid.Row="1"
+                    Style="{StaticResource PanelStyle}"
+                    Margin="14"
+                    Visibility="Collapsed">
+
+                <ScrollViewer VerticalScrollBarVisibility="Auto"
+                              HorizontalScrollBarVisibility="Disabled">
+
+                    <Grid>
+
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+
+                    <Button x:Name="ElevenLabsBackButton"
+                            Grid.Row="0"
+                            Content="← Back"
+                            Width="90"
+                            HorizontalAlignment="Left"
+                            Style="{StaticResource NormalButton}"
+                            Click="ElevenLabsBackButton_Click"/>
+
+                    <TextBlock Grid.Row="1"
+                               Text="ELEVENLABS"
+                               Foreground="#55D9FF"
+                               FontSize="14"
+                               FontWeight="SemiBold"
+                               Margin="0,16,0,0"/>
+
+                    <TextBlock Grid.Row="2"
+                               Text="Connect your ElevenLabs API key to make compatible ElevenLabs voices available in Chat Out Loud."
+                               Foreground="#AAB5CA"
+                               TextWrapping="Wrap"
+                               Margin="0,5,0,16"/>
+
+                    <StackPanel Grid.Row="3">
+
+                        <TextBlock Text="API Key"
+                                   FontWeight="SemiBold"
+                                   Margin="0,0,0,6"/>
+
+                        <Border Height="38"
+                                Background="#0B1222"
+                                BorderBrush="#314766"
+                                BorderThickness="1"
+                                CornerRadius="9">
+
+                            <PasswordBox x:Name="ElevenLabsApiKeyPasswordBox"
+                                         Padding="10,7"
+                                         Background="Transparent"
+                                         Foreground="#F4F7FF"
+                                         BorderThickness="0"
+                                         VerticalContentAlignment="Center"/>
+
+                        </Border>
+
+                    </StackPanel>
+
+                    <Border Grid.Row="5"
+                            Background="#0B1222"
+                            BorderBrush="#314766"
+                            BorderThickness="1"
+                            CornerRadius="10"
+                            Padding="12"
+                            Margin="0,16,0,0">
+
+                        <StackPanel>
+
+                            <TextBlock Text="Connection Status"
+                                       FontWeight="SemiBold"/>
+
+                            <TextBlock x:Name="ElevenLabsSetupStatusText"
+                                       Text="Not configured"
+                                       Foreground="#7787A4"
+                                       Margin="0,5,0,0"
+                                       TextWrapping="Wrap"/>
+
+                        </StackPanel>
+
+                    </Border>
+
+                    <StackPanel Grid.Row="6"
+                                Orientation="Horizontal"
+                                Margin="0,16,0,0">
+
+                        <Button x:Name="ElevenLabsVerifyButton"
+                                Content="Verify Connection"
+                                Width="150"
+                                Style="{StaticResource AccentButton}"
+                                Click="ElevenLabsVerifyButton_Click"/>
+
+                        <Button x:Name="ElevenLabsRemoveButton"
+                                Content="Remove Connection"
+                                Width="155"
+                                Margin="10,0,0,0"
+                                Style="{StaticResource NormalButton}"
+                                Click="ElevenLabsRemoveButton_Click"/>
+
+                    </StackPanel>
+
+                    <Button x:Name="ElevenLabsHelpButton"
+                            Grid.Row="7"
+                            Content="?  How to connect ElevenLabs"
+                            HorizontalAlignment="Left"
+                            VerticalAlignment="Bottom"
+                            Margin="0,16,0,0"
+                            Style="{StaticResource NormalButton}"
+                            Click="ElevenLabsHelpButton_Click"/>
+
+                    </Grid>
+
+                </ScrollViewer>
+
+            </Border>
+
+            <!-- MICROSOFT AZURE SPEECH SETUP -->
+            <Border x:Name="AzureSetupView"
+                    Grid.Row="1"
+                    Style="{StaticResource PanelStyle}"
+                    Margin="14"
+                    Visibility="Collapsed">
+
+                <ScrollViewer VerticalScrollBarVisibility="Auto"
+                              HorizontalScrollBarVisibility="Disabled">
+
+                    <Grid>
+
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="*"/>
+                        </Grid.RowDefinitions>
+
+                        <Button x:Name="AzureBackButton"
+                                Grid.Row="0"
+                                Content="← Back"
+                                Width="90"
+                                HorizontalAlignment="Left"
+                                Style="{StaticResource NormalButton}"
+                                Click="AzureBackButton_Click"/>
+
+                        <TextBlock Grid.Row="1"
+                                   Text="MICROSOFT AZURE SPEECH"
+                                   Foreground="#55D9FF"
+                                   FontSize="14"
+                                   FontWeight="SemiBold"
+                                   Margin="0,16,0,0"/>
+
+                        <TextBlock Grid.Row="2"
+                                   Text="Connect your Microsoft Azure Speech resource to make compatible Azure voices available in Chat Out Loud."
+                                   Foreground="#AAB5CA"
+                                   TextWrapping="Wrap"
+                                   Margin="0,5,0,16"/>
+
+                        <StackPanel Grid.Row="3">
+
+                            <TextBlock Text="Speech Resource Key"
+                                       FontWeight="SemiBold"
+                                       Margin="0,0,0,6"/>
+
+                            <Border Height="38"
+                                    Background="#0B1222"
+                                    BorderBrush="#314766"
+                                    BorderThickness="1"
+                                    CornerRadius="9">
+
+                                <PasswordBox x:Name="AzureSpeechKeyPasswordBox"
+                                             Padding="10,7"
+                                             Background="Transparent"
+                                             Foreground="#F4F7FF"
+                                             BorderThickness="0"
+                                             VerticalContentAlignment="Center"/>
+
+                            </Border>
+
+                        </StackPanel>
+
+                        <StackPanel Grid.Row="4"
+                                    Margin="0,16,0,0">
+
+                            <TextBlock Text="Region"
+                                       FontWeight="SemiBold"
+                                       Margin="0,0,0,6"/>
+
+                            <Border Height="38"
+                                    Background="#0B1222"
+                                    BorderBrush="#314766"
+                                    BorderThickness="1"
+                                    CornerRadius="9">
+
+                                <TextBox x:Name="AzureRegionTextBox"
+                                         Padding="10,7"
+                                         Background="Transparent"
+                                         Foreground="#F4F7FF"
+                                         BorderThickness="0"
+                                         VerticalContentAlignment="Center"/>
+
+                            </Border>
+
+                        </StackPanel>
+
+                        <Border Grid.Row="5"
+                                Background="#0B1222"
+                                BorderBrush="#314766"
+                                BorderThickness="1"
+                                CornerRadius="10"
+                                Padding="12"
+                                Margin="0,16,0,0">
+
+                            <StackPanel>
+
+                                <TextBlock Text="Connection Status"
+                                           FontWeight="SemiBold"/>
+
+                                <TextBlock x:Name="AzureSetupStatusText"
+                                           Text="Not configured"
+                                           Foreground="#7787A4"
+                                           Margin="0,5,0,0"
+                                           TextWrapping="Wrap"/>
+
+                            </StackPanel>
+
+                        </Border>
+
+                        <StackPanel Grid.Row="6"
+                                    Orientation="Horizontal"
+                                    Margin="0,16,0,0">
+
+                            <Button x:Name="AzureVerifyButton"
+                                    Content="Verify Connection"
+                                    Width="150"
+                                    Style="{StaticResource AccentButton}"
+                                    Click="AzureVerifyButton_Click"/>
+
+                            <Button x:Name="AzureRemoveButton"
+                                    Content="Remove Connection"
+                                    Width="155"
+                                    Margin="10,0,0,0"
+                                    Style="{StaticResource NormalButton}"
+                                    Click="AzureRemoveButton_Click"/>
+
+                        </StackPanel>
+
+                        <Button x:Name="AzureHelpButton"
+                                Grid.Row="7"
+                                Content="?  How to connect Microsoft Azure"
+                                HorizontalAlignment="Left"
+                                VerticalAlignment="Bottom"
+                                Margin="0,16,0,0"
+                                Style="{StaticResource NormalButton}"
+                                Click="AzureHelpButton_Click"/>
+
+                    </Grid>
+
+                </ScrollViewer>
 
             </Border>
 

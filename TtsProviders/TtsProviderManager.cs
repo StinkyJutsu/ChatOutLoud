@@ -44,6 +44,12 @@ internal sealed class TtsProviderManager
         manager.RegisterProvider(
             new GoogleCloudTtsProvider());
 
+        manager.RegisterProvider(
+            new ElevenLabsTtsProvider());
+
+        manager.RegisterProvider(
+            new AzureSpeechTtsProvider());
+
         return manager;
     }
 }

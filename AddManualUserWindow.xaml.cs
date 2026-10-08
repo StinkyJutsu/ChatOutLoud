@@ -78,8 +78,17 @@ public partial class AddManualUserWindow : Window
         }
         catch (Exception ex)
         {
+            System.Diagnostics.Trace.WriteLine(
+                $"Twitch user lookup error: {ex}");
+
             LookupStatusText.Text =
-                $"Lookup failed: {ex.Message}";
+                "Unable to find the Twitch user. Please try again.";
+
+            MessageBox.Show(
+                "The Twitch user lookup failed.\n\nCheck your internet connection and Twitch authorization, then try again.",
+                "Chat Out Loud - Twitch Lookup Error",
+                MessageBoxButton.OK,
+                MessageBoxImage.Error);
         }
     }
 

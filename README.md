@@ -2,22 +2,33 @@
 
 Chat Out Loud is a lightweight Windows desktop TTS application for Twitch chat.
 
-It connects directly to Twitch and reads incoming chat messages aloud using voices installed on the user's Windows PC.
+It connects directly to Twitch and reads incoming chat messages aloud using Windows voices or supported cloud TTS providers.
 
 ## Features
 
 - Twitch account authentication
+- Saved Twitch login and automatic session restoration
 - Live Twitch chat connection
+- Automatic chat reconnection
 - Windows TTS voice selection
-- Saves selected TTS voice
+- Google Cloud Text-to-Speech support
+- Microsoft Azure Speech support
+- ElevenLabs TTS support
+- Searchable voice selection grouped by provider
+- Saves selected TTS provider and voice
+- Secure local storage for TTS provider credentials
+- TTS provider connection verification
+- Local voice catalog caching
 - Adjustable speech volume
 - Adjustable speech speed
 - Selectable audio output device
 - FIFO speech queue
 - Skip current message
 - Clear speech queue
+- Viewers / Bots management and search
+- Manual Twitch user lookup
 - Mute specific users
-- Mute specific phrases
+- Mute specific words and phrases
 - Filter commands
 - Filter links
 - Filter numbers
@@ -38,20 +49,28 @@ It connects directly to Twitch and reads incoming chat messages aloud using voic
 - Internet connection
 - Windows-compatible audio output device
 
+Cloud TTS providers require users to supply their own accounts and credentials.
+
 ## Installation
 
 Download the latest `ChatOutLoud_Setup.exe` from the Releases section.
 
 Run the installer and launch Chat Out Loud.
 
-Each user authorizes their own Twitch account and configures their own local settings.
+Each user authorizes their own Twitch account and configures their preferred TTS provider, voice, audio output, and other settings.
+
+Settings and authorization are saved locally and restored when the application is reopened.
 
 ## Version
 
-Current release: **v0.1.0**
+**v0.4.0**
+
+Chat Out Loud is free to use.
 
 ## Privacy
 
-Chat Out Loud stores user settings and Twitch authentication information locally on the user's computer.
+Chat Out Loud stores user settings, Twitch authentication information, and optional TTS provider credentials locally on the user's computer.
 
-User-specific settings and authentication data are not included with the distributed installer.
+Sensitive authentication data and provider credentials are stored using Windows-protected storage.
+
+User-specific settings, authentication data, and provider credentials are not included with the distributed installer.
